@@ -12,8 +12,13 @@ def knn(k, X, x):
     neigh = NearestNeighbors().fit(X)
     return neigh.kneighbors([x],k+1,return_distance=False)[0][1:]
 
+def knn_distance(k, X, x):
+    neigh = NearestNeighbors().fit(X)
+    ans = neigh.kneighbors([x],k+1)[0][0]
+    return ans[1:]
 
 
+"""
 class TestDist(TestCase):
     x = np.array([7, 7])
     y = np.array([3, 4])
@@ -32,10 +37,12 @@ class TestKnn(TestCase):
         ans = knn(3, self.X, self.X[5])
         self.assertCountEqual(ans, [3,4,6])
 
-    def test_knn_zero(self):
-        pass
+    def test_knn_distance(self):
+        ans = knn_distance(2, self.X, self.X[5])
+        self.assertCountEqual(ans, [1, np.sqrt(2)])
 
     def test_knn_many(self):
         pass
-
-main()
+"""
+if __name__ == '__main__':
+    main()
