@@ -1,22 +1,18 @@
 import numpy as np
-from knn import *
 from knngraph import *
 
-sample = np.array([[1,1], [1,2], [2,1], [2,2], [3,4], [1,7], [5,5], [5,6], [6,7], [7,7]])
+#sample = np.array([[1,1], [1,2], [2,1], [2,2], [3,4], [1,7], [5,5], [5,6], [6,7], [7,7]])
 
 # input : Cluster sets
 # output : Affinity matrix
 
-W = w_matrix(sample, 3)
-
-def Affinity(Vc):
+def Affinity(X,Vc,Kc):
     a = 1
-    K = 4
-    n = len(sample)
+    #n = len(X)
     nc = len(Vc)
 
     affinity = np.zeros([nc,nc])
-    W = w_matrix(sample, 3)
+    W = w_matrix(X, Kc)
 
     for i in range(nc):
         for j in range(i+1,nc):

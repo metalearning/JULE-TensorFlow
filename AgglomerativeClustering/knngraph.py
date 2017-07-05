@@ -1,6 +1,7 @@
 from unittest import main, TestCase
 import numpy as np
 from knn import *
+import time
 
 sample = np.array([[1,1], [1,2], [2,1], [2,2], [3,4], [1,7], [5,5], [5,6], [6,7], [7,7]])
 
@@ -10,22 +11,25 @@ def w_matrix(X,K):
 
     weight_matrix = np.zeros([n, n])
 
-    sigma2 = 0
-    for i in range(n):
-        for j in knn_distance(K, X, X[i]):
-            sigma2 += j ** 2
-    sigma2 *= (a / n / K)
+    start = time.time()
+    distance, indices = knn(K, X)
+    current1= time.time()
+    print("knn time: ", current1 - start)
+    sigma2 = (a / n / K) * np.linalg.norm(distance)**2
 
     for i in range(n):
-        knn_index = knn(K, sample, sample[i])
-        for j in range(n):
-            if j in knn_index:
-                weight_matrix[i][j] = np.exp(-1 * (dist(sample[i], sample[j]) ** 2) / sigma2 ** 2)
+        #for j in range(n):
+        for j in indices[i]:
+            weight_matrix[i][j] = np.exp(-1 * (np.linalg.norm(X[i]- X[j])** 2) / sigma2 ** 2)
+    print("matrix time : ", time.time()- current1)
+    print("w_matrix calculation")
 
     return weight_matrix
 
-def k0graph(W):
-
+def k0graph(X):
+    print("k0graph")
+    W = w_matrix(X, 1)
+    print("Weight Matrix Complete")
     Vc = []
     n = len(W)
     for i in range(n):
@@ -47,8 +51,7 @@ def k0graph(W):
 
 class TestK0graph(TestCase):
     def test_k0graph(self):
-        W = w_matrix(sample, 1)
-        Vc = k0graph(W)
+        Vc = k0graph(sample)
         self.assertCountEqual(Vc, [[0,1,2,3,4,5],[6,7],[8,9]])
 
 if __name__ == "__main__":

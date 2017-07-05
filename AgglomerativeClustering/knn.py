@@ -8,17 +8,21 @@ from sklearn.neighbors import NearestNeighbors
 def dist(i, j):
     return np.linalg.norm(i-j)
 
-def knn(k, X, x):
-    neigh = NearestNeighbors().fit(X)
-    return neigh.kneighbors([x],k+1,return_distance=False)[0][1:]
-
-def knn_distance(k, X, x):
-    neigh = NearestNeighbors().fit(X)
-    ans = neigh.kneighbors([x],k+1)[0][0]
-    return ans[1:]
-
+def knn(k, X):
+    neigh = NearestNeighbors(k+1,algorithm='ball_tree').fit(X)
+    kneighbors = neigh.kneighbors(X,k+1,)
+    distance = np.array(kneighbors[0][:,1:])
+    indices = np.array(kneighbors[1][:,1:])
+    return distance, indices
 
 """
+def knn_distance(k, X):
+    neigh = NearestNeighbors().fit(X)
+    ans = neigh.kneighbors(X,k+1)[0]
+    ans = np.array(ans)
+    return ans
+"""
+
 class TestDist(TestCase):
     x = np.array([7, 7])
     y = np.array([3, 4])
@@ -37,12 +41,11 @@ class TestKnn(TestCase):
         ans = knn(3, self.X, self.X[5])
         self.assertCountEqual(ans, [3,4,6])
 
-    def test_knn_distance(self):
-        ans = knn_distance(2, self.X, self.X[5])
-        self.assertCountEqual(ans, [1, np.sqrt(2)])
-
-    def test_knn_many(self):
-        pass
 """
+    def test_knn_distance(self):
+        ans = knn_distance(2, self.X)
+"""
+
+
 if __name__ == '__main__':
     main()
