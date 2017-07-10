@@ -1,7 +1,7 @@
 import numpy as np
 from knngraph import *
 
-#sample = np.array([[1,1], [1,2], [2,1], [2,2], [3,4], [1,7], [5,5], [5,6], [6,7], [7,7]])
+
 
 # input : Cluster sets
 # output : Affinity matrix
@@ -33,6 +33,7 @@ def Affinity(X,Vc,Kc):
 
 class TestAffinity(TestCase):
     def test_affinity(self):
+        sample = np.array([[1, 1], [1, 2], [2, 1], [2, 2], [3, 4], [1, 7], [5, 5], [5, 6], [6, 7], [7, 7]])
         W = w_matrix(sample, 3)
         self.assertEqual(len(W[0][W[0]>0]),3)
 
@@ -42,10 +43,11 @@ class TestAffinity(TestCase):
         self.assertTrue((W[index]==np.array([[1,3],[9,11]])).all())
 
     def test_max_affinity(self):
+        sample = np.array([[1, 1], [1, 2], [2, 1], [2, 2], [3, 4], [1, 7], [5, 5], [5, 6], [6, 7], [7, 7]])
         Vc = k0graph(w_matrix(sample, 1))
-        A = Affinity(Vc)
+        A = Affinity(sample, Vc, 2)
         m = np.unravel_index(np.argmax(A), A.shape)
-        self.assertTupleEqual(m,(1,2))
+        self.assertTupleEqual(m,(0,1))
 
 
 
