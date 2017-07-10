@@ -1,5 +1,7 @@
 import numpy as np
 from scipy.misc import *
+from tensorflow.examples.tutorials.mnist import input_data
+
 
 
 def load_coil20():
@@ -17,10 +19,16 @@ def load_coil20():
     return data, labels
 
 def load_MNIST_test():
-    pass
+    mnist = input_data.read_data_sets("dataset/MNIST/", one_hot=False)
+    data = mnist.test.images
+    labels = mnist.test.labels
+
+    print(len(data), len(labels))
+    return data, labels
 
 def load_MNIST_train():
     pass
 
 
-#data, labels = load_coil20()
+
+data, labels = load_MNIST_test()
