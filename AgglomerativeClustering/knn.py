@@ -9,7 +9,7 @@ def dist(i, j):
     return np.linalg.norm(i-j)
 
 def knn(k, X):
-    neigh = NearestNeighbors(k+1,algorithm='ball_tree').fit(X)
+    neigh = NearestNeighbors(k+1).fit(X)
     kneighbors = neigh.kneighbors(X,k+1,)
     distance = np.array(kneighbors[0][:,1:])
     indices = np.array(kneighbors[1][:,1:])

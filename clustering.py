@@ -10,10 +10,11 @@ from measure import *
 data, labels = load_MNIST_test()
 data = data.reshape(len(data), 28*28)
 n_cluster = 10
+Ks = 20
 Kc = 5
 
 #print("Clustering Start")
-Vc = AGDL(data, n_cluster, Kc)
+Vc = AGDL(data, n_cluster, Ks, Kc)
 
 labels_pred = np.zeros(len(labels))
 

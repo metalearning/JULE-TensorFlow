@@ -15,10 +15,11 @@ def load_coil20():
         for j in range(72):
             index = (i-1)*72+j
             data[index]=imread("./dataset/coil-20/obj" + str(i) + "__" + str(j) + ".png","L")
-    print("label : ", len(labels))
+    print("number of data : ", len(labels))
     return data, labels
 
 def load_MNIST_test():
+
     mnist = input_data.read_data_sets("dataset/MNIST/", one_hot=False)
     data = mnist.test.images
     labels = mnist.test.labels
