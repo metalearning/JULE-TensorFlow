@@ -56,9 +56,11 @@ def Affinity3(C, Vc, Kc, W):
 
 def neighbor_set(X, Vc, Kc, W):
     Ns, As = [], []
-    time1 = time.time()
-    A = Affinity(X, Vc, Kc, W)
-    print("Affinity time : ", time.time() - time1)
+    #time1 = time.time()
+    #A = Affinity(X, Vc, Kc, W)
+    #np.save('A_MNIST.npy',A)
+    A = np.load('A_MNIST.npy')
+    #print("Affinity time : ", time.time() - time1)
     for i in range(len(A)):
         As.append([x for x in sorted(list(A[i]))[-1 * Kc:] if x > 0])  #   np.sort(A[i])[-1 * Kc:].tolist()
         n = len(As[i])
@@ -73,10 +75,11 @@ def neighbor_set(X, Vc, Kc, W):
 def AGDL(X, nt, Ks, Kc):
     Vc = k0graph(X)
     print("k0graph complete")
-    W = w_matrix(X, Ks)
 
+    #W = w_matrix(X, Ks)
+    W = np.load("W_" + str(Ks) + "_MNIST.npy")
+    print("neighbor")
     Ns, As = neighbor_set(X, Vc, Kc, W)
-    A = Affinity(X,Vc,Kc,W)
     nc = len(Vc)
 
     while nc > nt:
@@ -87,8 +90,9 @@ def AGDL(X, nt, Ks, Kc):
                 continue
             aff = max(As[i])
             if aff > max_affinity:
-                max_affinity = aff
                 j = int(Ns[i][As[i].index(aff)])
+                max_affinity = aff
+
                 if i < j:
                     max_index1 = i
                     max_index2 = j
@@ -99,6 +103,8 @@ def AGDL(X, nt, Ks, Kc):
         if max_index1 == max_index2:
             print("index alias")
 
+
+        print(len(Vc[max_index2]) == 0, max_affinity)
         Vc[max_index1].extend(Vc[max_index2])
         Vc[max_index2] = []
 
@@ -107,12 +113,13 @@ def AGDL(X, nt, Ks, Kc):
         As[max_index2] = []
 
 
+
         for i in range(len(Ns)):
             if max_index1 in Ns[i]:
                 index = Ns[i].index(max_index1)
                 As[i][index] = Affinity2(Vc[i],Vc[max_index1], Kc, W)
 
-            if max_index2 in Ns[i]:
+            if max_index2 in Ns[i] and max_index1 != i:
                 index = Ns[i].index(max_index2)
                 del Ns[i][index]
                 del As[i][index]
@@ -120,7 +127,19 @@ def AGDL(X, nt, Ks, Kc):
                     Ns[i].append(max_index1)
                     As[i].append(Affinity2(Vc[i],Vc[max_index1], Kc, W))
 
+        Ns[max_index1].extend(Ns[max_index2])
+        Ns[max_index1] = list(set(Ns[max_index1]))
+        As[max_index1] = []
+
+        if nc < 50:
+            print(Ns[max_index1])
         # Fine the Kc-nearest clusters for Cab
+
+        for i in range(len(Ns[max_index1])):
+
+            index = Ns[max_index1][i]
+            As[max_index1].append(Affinity2(Vc[index], Vc[max_index1], Kc, W))
+
         nc = nc - 1
 
 
@@ -128,11 +147,11 @@ def AGDL(X, nt, Ks, Kc):
     for i in range(len(Vc)):
         if len(Vc[i]) != 0:
             Cluster.append(Vc[i])
-    print("Cluster : ", Cluster)
+    #print("Cluster : ", Cluster)
     length = 0
     for i in range(len(Cluster)):
         length += len(Cluster[i])
-    print("Cluster Length : ", length, len(Cluster))
+    print("Data number, Cluster number : ", length, len(Cluster))
 
     return Cluster
 
@@ -148,6 +167,6 @@ if __name__ == '__main__':
     #print("initial set", Vc)
     #print("affinity", Affinity(sample, Vc, Kc))
     #print("neighbor set", neighbor_set(sample, Vc, Kc))
-    Vc = AGDL(sample,4, 3)
+    Vc = AGDL(sample,4, 3, 3)
 
 
