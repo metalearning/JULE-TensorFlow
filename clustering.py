@@ -1,30 +1,30 @@
 
 import numpy as np
-from data import *
+from loadData import *
 from AGDL import *
 from measure import *
 
-#data, labels = load_coil20()
-#data = data.reshape(len(data), 128*128)
-#n_cluster = 20
-data, labels = load_MNIST_test()
-data = data.reshape(len(data), 28*28)
-n_cluster = 10
-Ks = 20
-Kc = 5
+#data, labels, CLUSTER_NUMBER = load_coil100()
+#data, labels, CLUSTER_NUMBER = load_coil20()
+data, labels, CLUSTER_NUMBER = load_MNIST_test()
 
-#print("Clustering Start")
-Vc = AGDL(data, n_cluster, Ks, Kc)
+Ks = 25
+Kc = 15
 
-labels_pred = np.zeros(len(labels))
+cluster = AGDL(data, CLUSTER_NUMBER, Ks, Kc)
 
-for i in range(len(Vc)):
-    for j in range(len(Vc[i])):
-        labels_pred[Vc[i][j]]=i
+
+
+labels_pred = np.zeros(len(labels),dtype='i')
+
+for i in range(len(cluster)):
+    for j in range(len(cluster[i])):
+        labels_pred[cluster[i][j]]=i
 #print(labels_pred)
 
 
 print("nmi : %f" % NMI(labels, labels_pred))
+print("AC : %f" % ACC(labels, labels_pred))
 
 
 

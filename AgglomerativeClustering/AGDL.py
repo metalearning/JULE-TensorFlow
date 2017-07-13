@@ -1,7 +1,7 @@
 import numpy as np
 from knngraph import *
 
-def getAffinityMaxtrix(Vc,Kc,W):
+def getAffinityMaxtrix(Vc,W):
     nc = len(Vc)
 
     affinity = np.zeros([nc,nc])
@@ -15,11 +15,12 @@ def getAffinityMaxtrix(Vc,Kc,W):
             Ci, Cj = len(Vc[i]),len(Vc[j])
 
             ones_i = np.ones((Ci,1))
-            affinity[i][j] = np.transpose(ones_i).dot(W_ij).dot(W_ji).dot(ones_i)
+            ones_j = np.ones((Cj,1))
+            affinity[i][j] = (1/Ci**2)*np.transpose(ones_i).dot(W_ij).dot(W_ji).dot(ones_i) + (1/Cj**2)*np.transpose(ones_j).dot(W_ji).dot(W_ij).dot(ones_j)
             affinity[j][i] = affinity[i][j]
     return affinity
 
-def getAffinityBtwCluster(C1, C2, Kc, W):
+def getAffinityBtwCluster(C1, C2, W):
 
 
     ij = np.ix_(C1, C2)
@@ -29,20 +30,24 @@ def getAffinityBtwCluster(C1, C2, Kc, W):
     Ci, Cj = len(C1), len(C2)
 
     ones_i = np.ones((Ci, 1))
-    affinity = np.transpose(ones_i).dot(W_ij).dot(W_ji).dot(ones_i)
+    ones_j = np.ones((Cj, 1))
+    affinity = (1/Ci**2)*np.transpose(ones_i).dot(W_ij).dot(W_ji).dot(ones_i) + (1/Cj**2)*np.transpose(ones_j).dot(W_ji).dot(W_ij).dot(ones_j)
     #print(affinity)
     return affinity[0,0]
 
 def getNeighbor(Vc, Kc, W):
     Ns, As = [], []
     #time1 = time.time()
-    #A = getAffinityMaxtrix(Vc, Kc, W)
-    #np.save('A_MNIST.npy',A)
-    A = np.load('A_MNIST.npy')
+    print("affinity")
+    A = getAffinityMaxtrix(Vc, W)
+    np.save('A_MNIST.npy',A)
+    #A = np.load('A_MNIST.npy')
     #print("Affinity time : ", time.time() - time1)
     for i in range(len(A)):
         As.append([x for x in sorted(list(A[i]))[-1 * Kc:] if x > 0])
         n = len(As[i])
+        if n < Kc:
+            print("small")
         if n==0:
             Ns.append([])
         else:
@@ -55,8 +60,8 @@ def AGDL(data, targetClusterNum, Ks, Kc):
     cluster = k0graph(data)
     print("k0graph complete")
 
-    #W = w_matrix(data, Ks)
-    W = np.load("W_" + str(Ks) + "_MNIST.npy")
+    W = w_matrix(data, Ks)
+    #W = np.load("W_" + str(Ks) + "_MNIST.npy")
     print("neighbor")
     neighborSet, affinitySet = getNeighbor(cluster, Kc, W)
     currentClusterNum = len(cluster)
@@ -64,8 +69,10 @@ def AGDL(data, targetClusterNum, Ks, Kc):
     while currentClusterNum > targetClusterNum:
 
         max_affinity = 0
+        max_index1 = 0
+        max_index2 = 0
         for i in range(len(neighborSet)):
-            if len(affinitySet[i])==0:
+            if len(neighborSet[i])==0:
                 continue
             aff = max(affinitySet[i])
             if aff > max_affinity:
@@ -81,9 +88,18 @@ def AGDL(data, targetClusterNum, Ks, Kc):
 
         if max_index1 == max_index2:
             print("index alias")
+            print(affinitySet)
+            break
 
 
-        print(len(cluster[max_index2]) == 0, max_affinity)
+        #print(len(cluster[max_index2]) == 0, max_affinity)
+
+        if currentClusterNum < 150:
+            print(cluster[0])
+            #print(neighborSet[max_index1], neighborSet[max_index2])
+
+
+        #merge two cluster
         cluster[max_index1].extend(cluster[max_index2])
         cluster[max_index2] = []
 
@@ -96,28 +112,36 @@ def AGDL(data, targetClusterNum, Ks, Kc):
         for i in range(len(neighborSet)):
             if max_index1 in neighborSet[i]:
                 index = neighborSet[i].index(max_index1)
-                affinitySet[i][index] = getAffinityBtwCluster(cluster[i], cluster[max_index1], Kc, W)
+                affinitySet[i][index] = getAffinityBtwCluster(cluster[i], cluster[max_index1], W) # fix the affinity values
 
-            if max_index2 in neighborSet[i] and max_index1 != i:
+            #if max_index2 in neighborSet[i] and max_index1 != i:
+            if max_index2 in neighborSet[i]:
                 index = neighborSet[i].index(max_index2)
                 del neighborSet[i][index]
                 del affinitySet[i][index]
                 if max_index1 not in neighborSet[i] and max_index1 != i:
                     neighborSet[i].append(max_index1)
-                    affinitySet[i].append(getAffinityBtwCluster(cluster[i], cluster[max_index1], Kc, W))
+                    affinitySet[i].append(getAffinityBtwCluster(cluster[i], cluster[max_index1], W))
 
         neighborSet[max_index1].extend(neighborSet[max_index2])
         neighborSet[max_index1] = list(set(neighborSet[max_index1]))
         affinitySet[max_index1] = []
 
-        if currentClusterNum < 50:
-            print(neighborSet[max_index1])
+
         # Fine the Kc-nearest clusters for Cab
 
         for i in range(len(neighborSet[max_index1])):
-
-            index = neighborSet[max_index1][i]
-            affinitySet[max_index1].append(getAffinityBtwCluster(cluster[index], cluster[max_index1], Kc, W))
+            target_index = neighborSet[max_index1][i]
+            newAffinity = getAffinityBtwCluster(cluster[target_index], cluster[max_index1], W)
+            affinitySet[max_index1].append(newAffinity)
+        l1 = len(affinitySet[max_index1])
+        if len(affinitySet[max_index1]) > Kc:
+            index = np.argsort(affinitySet[max_index1])
+            neighborSet[max_index1] = neighborSet[index[-1*Kc:]]
+            affinitySet[max_index1] = affinitySet[index[-1*Kc:]]
+        l2 = len(affinitySet[max_index1])
+        if l2 < l1:
+            print(l2-l1)
 
         currentClusterNum = currentClusterNum - 1
 
