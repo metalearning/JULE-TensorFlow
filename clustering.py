@@ -1,23 +1,30 @@
-from sklearn import metrics
+
 import numpy as np
-from data import *
-from GDL import *
+from loadData import *
+from AGDL import *
+from measure import *
 
-data, labels = load_coil20()
-data = data.reshape(len(data), 128*128)
-n_cluster = 20
-Kc = 10
+#data, labels, CLUSTER_NUMBER = load_coil100()
+#data, labels, CLUSTER_NUMBER = load_coil20()
+data, labels, CLUSTER_NUMBER = load_MNIST_test()
 
-print("Clustering Start")
-Vc = GDL(data, n_cluster, Kc)
-labels_pred = np.zeros(72*20)
+Ks = 25
+Kc = 15
 
-for i in range(len(Vc)):
-    for j in range(len(Vc[i])):
-        labels_pred[Vc[i][j]]=i
-nmi = metrics.normalized_mutual_info_score(labels, labels_pred)
+cluster = AGDL(data, CLUSTER_NUMBER, Ks, Kc)
 
-print("nmi : %f" % nmi)
+
+
+labels_pred = np.zeros(len(labels),dtype='i')
+
+for i in range(len(cluster)):
+    for j in range(len(cluster[i])):
+        labels_pred[cluster[i][j]]=i
+#print(labels_pred)
+
+
+print("nmi : %f" % NMI(labels, labels_pred))
+print("AC : %f" % ACC(labels, labels_pred))
 
 
 
